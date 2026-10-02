@@ -14,6 +14,8 @@ class BOSecurityPage extends BOBasePage implements BOSecurityPageInterface {
 
   private readonly employeeSessionsPage: string;
 
+  private readonly cspPage: string;
+
   /**
    * @constructs
    * Setting up texts and selectors to use on security page
@@ -26,6 +28,7 @@ class BOSecurityPage extends BOBasePage implements BOSecurityPageInterface {
     // Header links
     this.customerSessionsPage = '#subtab-AdminSecuritySessionCustomer';
     this.employeeSessionsPage = '#subtab-AdminSecuritySessionEmployee';
+    this.cspPage = '#subtab-AdminSecurityCsp';
   }
 
   /*
@@ -49,6 +52,15 @@ class BOSecurityPage extends BOBasePage implements BOSecurityPageInterface {
    */
   async goToEmployeeSessionsPage(page: Page): Promise<void> {
     await this.clickAndWaitForURL(page, this.employeeSessionsPage);
+  }
+
+  /**
+   * Go to the Security headers tab (visible when the 'csp' feature flag is enabled)
+   * @param page {Page} Browser tab
+   * @returns {Promise<void>}
+   */
+  async goToCspPage(page: Page): Promise<void> {
+    await this.clickAndWaitForURL(page, this.cspPage);
   }
 }
 

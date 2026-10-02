@@ -20,6 +20,8 @@ class BOFeatureFlag extends BOBasePage implements BOFeatureFlagInterface {
 
   public readonly featureFlagDiscount: string;
 
+  public readonly featureFlagCsp: string;
+
   public readonly featureFlagExperimentalEndpoints: string;
 
   public readonly featureFlagMultipleImageFormats: string;
@@ -52,6 +54,7 @@ class BOFeatureFlag extends BOBasePage implements BOFeatureFlagInterface {
     this.featureFlagExperimentalEndpoints = 'admin_api_experimental_endpoints';
     this.featureFlagImprovedShipment = 'improved_shipment';
     this.featureFlagDiscount = 'discount';
+    this.featureFlagCsp = 'csp';
     // Selectors
     this.featureFlagSwitchButton = (status: string, feature: string, toggle: number) => `#feature_flag_${
       status}_feature_flags_${feature}_enabled_${toggle}`;
@@ -84,6 +87,9 @@ class BOFeatureFlag extends BOBasePage implements BOFeatureFlagInterface {
         isStable = false;
         break;
       case this.featureFlagDiscount:
+        isStable = false;
+        break;
+      case this.featureFlagCsp:
         isStable = false;
         break;
       case this.featureFlagExperimentalEndpoints:

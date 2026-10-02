@@ -237,6 +237,7 @@ export {default as boContactsPage} from '@pages/BO/shopParameters/contacts';
 export {default as boContactsCreatePage} from '@pages/BO/shopParameters/contacts/create';
 export {default as boCountriesPage} from '@pages/BO/international/locations/countries';
 export {default as boCountriesCreatePage} from '@pages/BO/international/locations/countries/create';
+export {default as boCspPage} from '@pages/BO/advancedParameters/security/csp';
 export {default as boCMSPageCategoriesCreatePage} from '@pages/BO/design/pages/category/create';
 export {default as boCMSPagesPage} from '@pages/BO/design/pages';
 export {default as boCMSPagesCreatePage} from '@pages/BO/design/pages/create';
