@@ -28,7 +28,7 @@ class BOSecurityPage extends BOBasePage implements BOSecurityPageInterface {
     // Header links
     this.customerSessionsPage = '#subtab-AdminSecuritySessionCustomer';
     this.employeeSessionsPage = '#subtab-AdminSecuritySessionEmployee';
-    this.cspPage = '#subtab-AdminSecurityCsp';
+    this.cspPage = '#subtab-AdminSecurityHeaders';
   }
 
   /*
