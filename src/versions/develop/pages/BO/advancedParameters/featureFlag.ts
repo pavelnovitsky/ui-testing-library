@@ -18,9 +18,9 @@ class BOFeatureFlag extends BOBasePage implements BOFeatureFlagInterface {
 
   public readonly featureFlagImprovedShipment: string;
 
-  public readonly featureFlagDiscount: string;
-
   public readonly featureFlagCsp: string;
+
+  public readonly featureFlagDiscount: string;
 
   public readonly featureFlagExperimentalEndpoints: string;
 

@@ -98,14 +98,16 @@ class BOCspPage extends BOBasePage implements BOCspPageInterface {
   }
 
   /**
-   * Returns the row of the first source matching the provided value in a grid, or null if not found
+   * Returns the row of the first source matching the provided value on the current page of a grid, or
+   * null if not found. Counts the rows actually rendered (not the grid's header total), so it never waits
+   * on a row that is only on a later page — the violations log can hold one row per source per page.
    * @param page {Page} Browser tab
    * @param source {string} The source to look for
    * @param gridId {string} Grid id (csp_log = violations, csp_rule = allowed sources)
    * @returns {Promise<number|null>}
    */
   async getNthRowBySource(page: Page, source: string, gridId: string = this.violationsGridId): Promise<number|null> {
-    const rows = await this.getNumberOfElementInGrid(page, gridId);
+    const rows = await page.locator(`${this.gridTable(gridId)} tbody tr:not(.empty_row)`).count();
 
     for (let row = 1; row <= rows; ++row) {
       const rowSource = await this.getTextColumn(page, 'source', row, gridId);
