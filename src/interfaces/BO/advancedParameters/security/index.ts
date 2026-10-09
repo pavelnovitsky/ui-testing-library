@@ -7,4 +7,5 @@ export interface BOSecurityPageInterface extends BOBasePagePageInterface {
   goToCspPage(page: Page): Promise<void>;
   goToCustomerSessionsPage(page: Page): Promise<void>;
   goToEmployeeSessionsPage(page: Page): Promise<void>;
+  goToSecurityHeadersPage(page: Page): Promise<void>;
 }

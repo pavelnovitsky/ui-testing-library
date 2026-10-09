@@ -3,7 +3,7 @@ import BOBasePage from '@pages/BO/BOBasePage';
 import {type Page} from '@playwright/test';
 
 /**
- * Security headers page (Advanced parameters > Security > Security headers),
+ * Content Security Policy page (Advanced parameters > Security > Content Security Policy),
  * contains the Content Security Policy log-driven curation grid.
  * @class
  * @extends BOBasePage
@@ -34,7 +34,7 @@ class BOCspPage extends BOBasePage implements BOCspPageInterface {
   constructor() {
     super();
 
-    this.pageTitle = 'Security headers •';
+    this.pageTitle = 'Content Security Policy •';
 
     // Grid selectors (grid id: csp_log)
     this.gridPanel = '#csp_log_grid_panel';
