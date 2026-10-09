@@ -3,29 +3,34 @@ import BOBasePage from '@pages/BO/BOBasePage';
 import {type Page} from '@playwright/test';
 
 /**
- * Content Security Policy page (Advanced parameters > Security > Content Security Policy),
- * contains the Content Security Policy log-driven curation grid.
+ * Content Security Policy page (Advanced parameters > Security > Content Security Policy).
+ * The page shows two grids per surface: the reported violations (grid id `csp_log`) and the curated
+ * allow-list (grid id `csp_rule`), plus a read-only list of the back-office built-in sources.
  * @class
  * @extends BOBasePage
  */
 class BOCspPage extends BOBasePage implements BOCspPageInterface {
   public readonly pageTitle: string;
 
-  private readonly gridPanel: string;
+  public readonly violationsGridId: string;
 
-  private readonly gridHeader: string;
+  public readonly allowedSourcesGridId: string;
 
-  private readonly gridHeaderTitle: string;
+  private readonly gridPanel: (gridId: string) => string;
 
-  private readonly gridTable: string;
+  private readonly gridHeaderTitle: (gridId: string) => string;
 
-  private readonly gridTableBody: string;
+  private readonly gridTable: (gridId: string) => string;
 
-  private readonly gridTableEmptyRow: string;
+  private readonly gridTableEmptyRow: (gridId: string) => string;
 
-  private readonly gridTableRow: (row: number) => string;
+  private readonly gridTableRow: (gridId: string, row: number) => string;
 
-  private readonly gridTableColumn: (row: number, column: string) => string;
+  private readonly gridTableColumn: (gridId: string, row: number, column: string) => string;
+
+  private readonly builtInSourcesPanel: string;
+
+  private readonly builtInSourcesRow: string;
 
   /**
    * @constructs
@@ -36,15 +41,22 @@ class BOCspPage extends BOBasePage implements BOCspPageInterface {
 
     this.pageTitle = 'Content Security Policy •';
 
-    // Grid selectors (grid id: csp_log)
-    this.gridPanel = '#csp_log_grid_panel';
-    this.gridHeader = `${this.gridPanel} .card-header`;
-    this.gridHeaderTitle = `${this.gridHeader} h3`;
-    this.gridTable = '#csp_log_grid_table';
-    this.gridTableBody = `${this.gridTable} tbody`;
-    this.gridTableEmptyRow = `${this.gridTableBody} tr.empty_row`;
-    this.gridTableRow = (row: number) => `${this.gridTable} tbody tr:nth-child(${row})`;
-    this.gridTableColumn = (row: number, column: string) => `${this.gridTableRow(row)} td.column-${column}`;
+    this.violationsGridId = 'csp_log';
+    this.allowedSourcesGridId = 'csp_rule';
+
+    // Grid selectors, parameterized by grid id (csp_log = violations, csp_rule = allowed sources)
+    this.gridPanel = (gridId: string) => `#${gridId}_grid_panel`;
+    this.gridHeaderTitle = (gridId: string) => `${this.gridPanel(gridId)} .card-header h3`;
+    this.gridTable = (gridId: string) => `#${gridId}_grid_table`;
+    this.gridTableEmptyRow = (gridId: string) => `${this.gridTable(gridId)} tbody tr.empty_row`;
+    this.gridTableRow = (gridId: string, row: number) => `${this.gridTable(gridId)} tbody tr:nth-child(${row})`;
+    this.gridTableColumn = (gridId: string, row: number, column: string): string => (
+      `${this.gridTableRow(gridId, row)} td.column-${column}`
+    );
+
+    // Read-only "Built-in back-office sources" panel (admin surface only)
+    this.builtInSourcesPanel = '#csp_built_in_sources';
+    this.builtInSourcesRow = `${this.builtInSourcesPanel} table tbody tr`;
   }
 
   /*
@@ -52,45 +64,51 @@ class BOCspPage extends BOBasePage implements BOCspPageInterface {
    */
 
   /**
-   * Get the "no records" text shown by the grid when empty
+   * Get the "no records" text shown by a grid when empty
    * @param page {Page} Browser tab
+   * @param gridId {string} Grid id (csp_log = violations, csp_rule = allowed sources)
    * @returns {Promise<string>}
    */
-  async getTextForEmptyTable(page: Page): Promise<string> {
-    return this.getTextContent(page, this.gridTableEmptyRow);
+  async getTextForEmptyTable(page: Page, gridId: string = this.violationsGridId): Promise<string> {
+    return this.getTextContent(page, this.gridTableEmptyRow(gridId));
   }
 
   /**
-   * Get number of rows in the log grid
+   * Get the number of rows in a grid (read from its header count)
    * @param page {Page} Browser tab
+   * @param gridId {string} Grid id (csp_log = violations, csp_rule = allowed sources)
    * @returns {Promise<number>}
    */
-  async getNumberOfElementInGrid(page: Page): Promise<number> {
-    return this.getNumberFromText(page, this.gridHeaderTitle);
+  async getNumberOfElementInGrid(page: Page, gridId: string = this.violationsGridId): Promise<number> {
+    return this.getNumberFromText(page, this.gridHeaderTitle(gridId));
   }
 
   /**
-   * Get the text of a column for a given row
+   * Get the text of a column for a given row.
+   * Violations columns: directive, source, shop_name, is_weakening, document_uri, sample, source_location,
+   * hits, date_add. Allowed-sources columns: directive, source, shop_name, is_weakening, date_add.
    * @param page {Page} Browser tab
-   * @param columnName {string} Column name (directive, source, is_allowed, hits, document_uri)
+   * @param columnName {string} Column name
    * @param row {number} Row index in the table
+   * @param gridId {string} Grid id (csp_log = violations, csp_rule = allowed sources)
    * @returns {Promise<string>}
    */
-  async getTextColumn(page: Page, columnName: string, row: number = 1): Promise<string> {
-    return this.getTextContent(page, this.gridTableColumn(row, columnName));
+  async getTextColumn(page: Page, columnName: string, row: number = 1, gridId: string = this.violationsGridId): Promise<string> {
+    return this.getTextContent(page, this.gridTableColumn(gridId, row, columnName));
   }
 
   /**
-   * Returns the row of the first reported source matching the provided value, or null if not found
+   * Returns the row of the first source matching the provided value in a grid, or null if not found
    * @param page {Page} Browser tab
-   * @param source {string} The blocked source to look for
+   * @param source {string} The source to look for
+   * @param gridId {string} Grid id (csp_log = violations, csp_rule = allowed sources)
    * @returns {Promise<number|null>}
    */
-  async getNthRowBySource(page: Page, source: string): Promise<number|null> {
-    const rows = await this.getNumberOfElementInGrid(page);
+  async getNthRowBySource(page: Page, source: string, gridId: string = this.violationsGridId): Promise<number|null> {
+    const rows = await this.getNumberOfElementInGrid(page, gridId);
 
     for (let row = 1; row <= rows; ++row) {
-      const rowSource = await this.getTextColumn(page, 'source', row);
+      const rowSource = await this.getTextColumn(page, 'source', row, gridId);
 
       if (rowSource.trim() === source.trim()) {
         return row;
@@ -98,6 +116,19 @@ class BOCspPage extends BOBasePage implements BOCspPageInterface {
     }
 
     return null;
+  }
+
+  /**
+   * Get the number of built-in back-office sources listed read-only on the page (admin surface only)
+   * @param page {Page} Browser tab
+   * @returns {Promise<number>}
+   */
+  async getNumberOfBuiltInSources(page: Page): Promise<number> {
+    if (await this.elementNotVisible(page, this.builtInSourcesPanel, 1000)) {
+      return 0;
+    }
+
+    return page.locator(this.builtInSourcesRow).count();
   }
 }
 
